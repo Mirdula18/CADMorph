@@ -1,0 +1,19 @@
+venv/
+__pycache__/
+*.pyc
+.claude/settings.local.json
+
+
+# added by T001 setup
+node_modules/
+dist/
+build/
+*.egg-info/
+.env*
+*.log
+data/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+Thumbs.db
+.DS_Store
