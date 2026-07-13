@@ -1,0 +1,7 @@
+{% if after.text_payload %}
+New {{ kind }} {{ q(after.text_payload) }} added.
+{% elif semantic %}
+New entity added; type {{ q(semantic) }} (inferred).
+{% else %}
+New {{ kind }} entity added.
+{% endif %}

@@ -1,0 +1,7 @@
+{% if before.text_payload %}
+{{ kind|capitalize }} {{ q(before.text_payload) }} removed.
+{% elif semantic %}
+Entity removed; type {{ q(semantic) }} (inferred).
+{% else %}
+{{ kind|capitalize }} entity removed.
+{% endif %}

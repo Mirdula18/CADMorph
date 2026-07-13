@@ -1,0 +1,5 @@
+{% if "dimension_value" in kinds %}
+Dimension {{ q(after.label) }} changed from {{ q(before.dimension_value) }} to {{ q(after.dimension_value) }}.
+{% else %}
+Dimension {{ q(after.label) }} modified ({{ kinds|join(", ") }}).
+{% endif %}

@@ -1,0 +1,5 @@
+{% if semantic %}
+Entity modified ({{ kinds|join(", ") }}); type {{ q(semantic) }} (inferred).
+{% else %}
+Entity modified ({{ kinds|join(", ") }}).
+{% endif %}

@@ -1,0 +1,5 @@
+{% if "text" in kinds %}
+Text changed from {{ q(before.text_payload) }} to {{ q(after.text_payload) }}.
+{% else %}
+Text {{ q(after.text_payload) }} modified ({{ kinds|join(", ") }}).
+{% endif %}
