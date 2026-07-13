@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cadmorph"
+version = "0.1.0"
+description = "AI-based CAD drawing change detection - vector path (feature 001)"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111,<1",
+    "uvicorn>=0.30,<1",
+    "PyMuPDF>=1.24,<2",
+    "pydantic>=2.7,<3",
+    "structlog>=24.1,<26",
+    "jinja2>=3.1,<4",
+    "numpy>=1.26,<3",
+    "scipy>=1.13,<2",
+    "python-multipart>=0.0.9",
+    "reportlab>=4.1,<5",
+]
+
+[project.optional-dependencies]
+# ML stack is required from User Story 1 (T020+) onward; kept out of the
+# core install so foundational phases stay light.
+ml = [
+    "torch>=2.3,<3",
+    "torch-geometric>=2.5,<3",
+]
+dev = [
+    "pytest>=8,<9",
+    "httpx>=0.27,<1",
+    "jsonschema>=4.22,<5",
+    "import-linter>=2,<3",
+    "ruff>=0.4,<1",
+    "mypy>=1.10,<2",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# B008: FastAPI's File(...)/Form(...) parameter defaults are the framework idiom.
+"src/cadmorph/api/routes.py" = ["B008"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+
+# Constitution II (Grounded Outputs), enforced structurally: the summarizer
+# may only see the delta contract — never extraction, rendering, or pixels.
+[tool.importlinter]
+root_package = "cadmorph"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "summarize imports only the delta contract"
+type = "forbidden"
+source_modules = ["cadmorph.summarize"]
+forbidden_modules = [
+    "cadmorph.extraction",
+    "cadmorph.report",
+    "cadmorph.graph",
+    "fitz",
+]
