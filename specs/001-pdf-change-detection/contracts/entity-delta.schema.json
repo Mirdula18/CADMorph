@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cadmorph.local/contracts/entity-delta.schema.json",
+  "title": "EntityDelta",
+  "version": "1.1.0",
+  "$comment": "v1.1.0 (2026-07-05): added EntityState.label (nullable) — every emitter, including the feature 002 raster provider, must include this property key (value may be null when the source provides no label). v1.0.0: initial.",
+  "description": "Contract between change detection and summarization/report layers. Feature 002 (raster fallback) must emit this same schema with provenance values of its own.",
+  "type": "object",
+  "required": ["delta_id", "change_type", "before", "after", "anchor_bbox"],
+  "additionalProperties": false,
+  "properties": {
+    "delta_id": { "type": "string", "minLength": 1 },
+    "change_type": { "enum": ["added", "removed", "modified"] },
+    "modification_kinds": {
+      "type": "array",
+      "items": { "enum": ["moved", "geometry", "text", "dimension_value", "style"] },
+      "uniqueItems": true
+    },
+    "before": { "oneOf": [{ "$ref": "#/$defs/EntityState" }, { "type": "null" }] },
+    "after": { "oneOf": [{ "$ref": "#/$defs/EntityState" }, { "type": "null" }] },
+    "match": { "oneOf": [{ "$ref": "#/$defs/EntityMatch" }, { "type": "null" }] },
+    "anchor_bbox": { "$ref": "#/$defs/BBox" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "change_type": { "const": "added" } } },
+      "then": { "properties": { "before": { "type": "null" }, "after": { "$ref": "#/$defs/EntityState" } } }
+    },
+    {
+      "if": { "properties": { "change_type": { "const": "removed" } } },
+      "then": { "properties": { "before": { "$ref": "#/$defs/EntityState" }, "after": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "change_type": { "const": "modified" } } },
+      "then": {
+        "properties": {
+          "before": { "$ref": "#/$defs/EntityState" },
+          "after": { "$ref": "#/$defs/EntityState" },
+          "modification_kinds": { "type": "array", "minItems": 1 }
+        },
+        "required": ["modification_kinds"]
+      }
+    }
+  ],
+  "$defs": {
+    "BBox": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "[x0, y0, x1, y1] in sheet coordinates"
+    },
+    "LabeledValue": {
+      "type": "object",
+      "required": ["value", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": ["string", "number"] },
+        "provenance": { "enum": ["vector-exact", "inference"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "if": { "properties": { "provenance": { "const": "inference" } } },
+      "then": { "required": ["value", "provenance", "confidence"] }
+    },
+    "EntityState": {
+      "type": "object",
+      "required": ["entity_id", "kind", "bbox", "geometry_signature"],
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": { "type": "string" },
+        "kind": { "enum": ["linework", "text", "dimension", "symbol", "hatch"] },
+        "bbox": { "$ref": "#/$defs/BBox" },
+        "position": {
+          "type": "array", "items": { "type": "number" },
+          "minItems": 2, "maxItems": 2
+        },
+        "geometry_signature": { "type": "string" },
+        "layer": { "type": ["string", "null"] },
+        "style": { "type": ["object", "null"] },
+        "text_payload": { "type": ["string", "null"] },
+        "label": {
+          "type": ["string", "null"],
+          "description": "Human-readable entity label read from the text layer (e.g. dimension name 'D14'); null when the source provides none. Never inferred (Constitution IV)."
+        },
+        "dimension_value": {
+          "type": ["string", "null"],
+          "description": "Dimension text exactly as annotated in the source, unit string preserved; null = unavailable, MUST be reported as unavailable, never guessed (FR-009)"
+        },
+        "semantic_label": {
+          "oneOf": [{ "$ref": "#/$defs/LabeledValue" }, { "type": "null" }],
+          "description": "Entity-type label; the only inference-derived field on an entity state (Constitution IV)"
+        }
+      }
+    },
+    "EntityMatch": {
+      "type": "object",
+      "required": ["old_entity_id", "new_entity_id", "tier"],
+      "additionalProperties": false,
+      "properties": {
+        "old_entity_id": { "type": ["string", "null"] },
+        "new_entity_id": { "type": ["string", "null"] },
+        "tier": { "enum": ["exact", "attribute", "learned"] },
+        "similarity": { "oneOf": [{ "$ref": "#/$defs/LabeledValue" }, { "type": "null" }] }
+      }
+    }
+  }
+}
